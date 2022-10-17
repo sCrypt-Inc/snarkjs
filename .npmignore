@@ -1,0 +1,16 @@
+tsconfig.json
+src
+test
+.vscode
+.eslint*
+*.js.map
+snarkjs_example
+out
+.husky
+.travis.yml
+publishcheck.sh
+.nycrc
+coverage
+.nyc_output
+docs
+*.log
