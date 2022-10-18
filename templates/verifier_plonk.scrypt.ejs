@@ -1800,7 +1800,7 @@ struct Proof {
     
 }
 
-contract PlonkVerifier {
+library Plonk {
     
     static const int n = <%=2**power%>;
     static const int nPower = <%=power%>;
@@ -1849,11 +1849,7 @@ contract PlonkVerifier {
     }
 
     static function checkField(int field) : bool {
-        bool ret = false;
-        if (field < q) {
-            ret = true;
-        }
-        return ret;
+        return field < q;
     }
 
     static function checkInput(Proof proof) : bool {
@@ -1867,7 +1863,6 @@ contract PlonkVerifier {
     }
 
     static function mulmod(int x, int y, int k) : int {
-
         return x * y % k;
     }
 
@@ -1999,33 +1994,22 @@ contract PlonkVerifier {
 
 
     static function calculateLagrange(Challanges challanges) : int[nLagrange] {
-
-        <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>
-        int eval_l<%=i%> = 0;
+        <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>int eval_l<%=i%> = 0;
         <% } %>
         int w = 1;
 
-        <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>
-        eval_l<%=i%> = mulmod(n, (challanges.xi - w + q) % q, q);
+        <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>eval_l<%=i%> = mulmod(n, (challanges.xi - w + q) % q, q);
         <% if (i<Math.max(nPublic, 1)) { %>w = mulmod(w, w1, q);<% } %>
         <% } %>
-
         // inverse
-        <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>
-        eval_l<%=i%> = modReduce(inverse(eval_l<%=i%>), q);
+        <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>eval_l<%=i%> = modReduce(inverse(eval_l<%=i%>), q);
         <% } %>    
-
-        int zh = challanges.zh;
-
+        
         w = 1;
-
         <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>
-        <% if (i==1) { %>
-        eval_l1 = mulmod(eval_l1, zh, q);
-        <% } else { %>
-        eval_l<%=i%> = mulmod(w, mulmod(eval_l<%=i%>, zh, q), q);
-        <% } %>
-        <% if (i<Math.max(nPublic, 1)) { %>w = mulmod(w, w1, q);<% } %>
+        <% if (i==1) { %>eval_l1 = mulmod(eval_l1, challanges.zh, q);
+        <% } else { %>eval_l<%=i%> = mulmod(w, mulmod(eval_l<%=i%>, challanges.zh, q), q);
+        <% } %><% if (i<Math.max(nPublic, 1)) { %>w = mulmod(w, w1, q);<% } %>
         <% } %>
         return [ 0,
             <% for (let i=1; i<=Math.max(nPublic, 1); i++) { %>eval_l<%=i%><% if (i<Math.max(nPublic, 1)) { %>,<% } %><% } %>
@@ -2215,7 +2199,7 @@ contract PlonkVerifier {
         return g1_mulAcc(B1, proof.wxiw, s);
     }
    
-    public function verifyProof(Proof proof, int[nPublic] pubSignals) {
+    static function verifyProof(Proof proof, int[nPublic] pubSignals) : bool {
 
         require(checkInput(proof));
 
@@ -2234,7 +2218,7 @@ contract PlonkVerifier {
         int s = a1.y;
         s = (qf - s) % qf;
 
-        require(BN256Pairing.pairCheckP2Precalc({
+        return BN256Pairing.pairCheckP2Precalc({
             a1.x,
             s
         }, {
@@ -2243,7 +2227,16 @@ contract PlonkVerifier {
         }, b1, {
             {G2x1, G2x2},
             {G2y1, G2y2}
-        }));
+        });
     }
-   
+}
+
+/*************** a example verifier ***************************
+****************************************************************/
+
+contract PlonkVerifier {
+
+    public function unlock(Proof proof, int[<%=nPublic%>] pubSignals) {
+        require(Plonk.verifyProof(proof, pubSignals));
+    }
 }
