@@ -37,7 +37,7 @@ To download the latest version of Node, see [here](https://nodejs.org/en/downloa
 To install `snarkjs` run:
 
 ```sh
-npm install -g snarkjs@latest
+npm install -g snarkjs-scrypt
 ```
 
 If you're seeing an error, try prefixing both commands with `sudo` and running them again.
@@ -461,7 +461,7 @@ If all is well, you should see that `OK` has been outputted to your console. Thi
 
 ### 25. Turn the verifier into a smart contract
 ```sh
-snarkjs zkey export solidityverifier circuit_final.zkey verifier.sol
+snarkjs zkey export scryptverifier circuit_final.zkey verifier.scrypt
 ```
 
 Finally, we export the verifier as a Solidity smart-contract so that we can publish it on-chain -- using [remix](https://remix.ethereum.org/) for example. For the details on how to do this, refer to section 4 of [this tutorial](https://blog.iden3.io/first-zk-proof.html).
@@ -480,11 +480,11 @@ And voila! That's all there is to it :)
 
 ```sh
 npm init
-npm install snarkjs
+npm install snarkjs-scrypt
 ```
 
 ```js
-const snarkjs = require("snarkjs");
+const snarkjs = require("snarkjs-scrypt");
 const fs = require("fs");
 
 async function run() {
@@ -515,7 +515,7 @@ run().then(() => {
 Load `snarkjs.min.js` and start using it as usual.
 
 ```
-cp node_modules/snarkjs/build/snarkjs.min.js .
+cp node_modules/snarkjs-scrypt/build/snarkjs.min.js .
 ```
 
 
