@@ -254,7 +254,12 @@ In this case, we've chosen `1000`,  but we can change this to anything we want (
 circom circuit.circom --r1cs --wasm --sym
 ```
 
-The `circom` command takes one input (the circuit to compile, in our case `circuit.circom`) and three options:
+At the moment, we support both bn128(default) and bls12381:
+```sh
+circom circuit.circom --r1cs --wasm --sym --prime bls12381
+```
+
+The `circom` command takes one input (the circuit to compile, in our case `circuit.circom`) and four options:
 
 - `r1cs`: generates `circuit.r1cs` (the r1cs constraint system of the circuit in binary format).
 
@@ -262,6 +267,7 @@ The `circom` command takes one input (the circuit to compile, in our case `circu
 
 - `sym`: generates `circuit.sym` (a symbols file required for debugging and printing the constraint system in an annotated mode).
 
+- `prime`: receives the name of the curve (bn128, bls12381) [default: bn128]
 
 ### 11. View information about the circuit
 ```sh

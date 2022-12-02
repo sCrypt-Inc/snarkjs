@@ -10,8 +10,19 @@ import exportVerificationKey from "./zkey_export_verificationkey.js";
 export default async function exportScryptVerifier(zKeyName, templates, logger) {
 
     const verificationKey = await exportVerificationKey(zKeyName, logger);
-
-    let template = templates[verificationKey.protocol];
+    
+    let template;
+    if (verificationKey.protocol == "groth16") {
+        if (verificationKey.curve == "bn128") {
+            template = templates[verificationKey.protocol];
+        } else if (verificationKey.curve == "bls12381") {
+            template = templates[verificationKey.curve];
+        } else {
+            throw new Error("unkown curve");
+        }
+    } else if (verificationKey.protocol == "plonk") {
+        template = templates[verificationKey.protocol];
+    }
 
     return ejs.render(template,  verificationKey);
 }

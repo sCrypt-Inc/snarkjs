@@ -5953,6 +5953,17 @@ async function exportScryptVerifier(zKeyName, templates, logger) {
     const verificationKey = await zkeyExportVerificationKey(zKeyName);
 
     let template = templates[verificationKey.protocol];
+    if (template.protocol == "groth16") {
+        if (template.curve == "bn128") {
+            template = templates[verificationKey.protocol];
+        } else if (zkey.curve == "bls12381") {
+            template = templates[verificationKey.curve];
+        } else {
+            throw new Error("unkown curve");
+        }
+    } else if (zkey.protocol == "plonk") {
+        template = templates[verificationKey.protocol];
+    }
 
     return ejs__default["default"].render(template,  verificationKey);
 }
@@ -5976,7 +5987,7 @@ async function exportScryptVerifier(zKeyName, templates, logger) {
     along with snarkJS. If not, see <https://www.gnu.org/licenses/>.
 */
 
-var zkey = /*#__PURE__*/Object.freeze({
+var zkey$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     newZKey: newZKey,
     exportBellman: phase2exportMPCParams,
@@ -7914,4 +7925,4 @@ exports.plonk = plonk;
 exports.powersOfTau = powersoftau;
 exports.r1cs = r1cs;
 exports.wtns = wtns;
-exports.zKey = zkey;
+exports.zKey = zkey$1;
