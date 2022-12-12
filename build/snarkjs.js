@@ -19679,8 +19679,8 @@ var snarkjs = (function (exports) {
         }
     }
 
-    const O_TRUNC = 1024;
-    const O_CREAT = 512;
+    const O_TRUNC = 512;
+    const O_CREAT = 64;
     const O_RDWR = 2;
     const O_RDONLY = 0;
 
