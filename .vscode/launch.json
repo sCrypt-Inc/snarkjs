@@ -103,6 +103,22 @@
                 "test/plonk_circuit/verifier.sol",
             ]
         },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "export sCrypt G16 verifier",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "cli.js",
+            "args": [
+                "zkey",
+                "export",
+                "scryptverifier",
+                "test/g16_circuit/circuit.zkey",
+                "test/g16_circuit/verifier.scrypt",
+            ]
+        },
         {            
             "type": "node",            
             "request": "launch",            

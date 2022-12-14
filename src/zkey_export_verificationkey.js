@@ -20,7 +20,8 @@
 import * as binFileUtils from "@iden3/binfileutils";
 import * as zkeyUtils from "./zkey_utils.js";
 import { getCurveFromQ as getCurve } from "./curves.js";
-import { utils } from "ffjavascript";
+import { utils, buildBn128 } from "ffjavascript";
+
 const {stringifyBigInts} = utils;
 
 export default async function zkeyExportVerificationKey(zkeyName, /* logger */ ) {
@@ -47,22 +48,25 @@ async function groth16Vk(zkey, fd, sections) {
     const curve = await getCurve(zkey.q);
     const sG1 = curve.G1.F.n8*2;
 
+
     const alphaBeta = await curve.pairing( zkey.vk_alpha_1 , zkey.vk_beta_2 );
 
+    
     let vKey = {
         protocol: zkey.protocol,
         curve: curve.name,
         nPublic: zkey.nPublic,
 
         vk_alpha_1: curve.G1.toObject(zkey.vk_alpha_1),
+        
 
         vk_beta_2: curve.G2.toObject(zkey.vk_beta_2),
         vk_gamma_2:  curve.G2.toObject(zkey.vk_gamma_2),
         vk_delta_2:  curve.G2.toObject(zkey.vk_delta_2),
 
-        vk_alphabeta_12: curve.Gt.toObject(alphaBeta)
+        vk_alphabeta_12: curve.Gt.toObject(alphaBeta),
     };
-
+    
     // Read IC Section
     ///////////
     await binFileUtils.startReadUniqueSection(fd, sections, 3);

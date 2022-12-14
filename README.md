@@ -464,17 +464,6 @@ If all is well, you should see that `OK` has been outputted to your console. Thi
 snarkjs zkey export scryptverifier circuit_final.zkey verifier.scrypt
 ```
 
-Finally, we export the verifier as a Solidity smart-contract so that we can publish it on-chain -- using [remix](https://remix.ethereum.org/) for example. For the details on how to do this, refer to section 4 of [this tutorial](https://blog.iden3.io/first-zk-proof.html).
-
-### 26. Simulate a verification call
-```sh
-snarkjs zkey export soliditycalldata public.json proof.json
-```
-
-We use `soliditycalldata` to simulate a verification call, and cut and paste the result directly in the verifyProof field in the deployed smart contract in the remix environment.
-
-And voila! That's all there is to it :)
-
 
 ## Using Node
 

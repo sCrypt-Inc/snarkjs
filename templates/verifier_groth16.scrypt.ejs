@@ -1990,13 +1990,12 @@ OP_3 OP_PICK 11 OP_PICK OP_MUL 12 OP_PICK OP_4 OP_PICK OP_MUL OP_ADD OP_3 OP_PIC
 
 }
  
- 
 
 struct VerifyingKey {
-    FQ12 millerb1a1;
+    FQ12 millerb1a1;         // Precalculated miller(alpha, beta)
     G2Point gamma;
     G2Point delta;
-    G1Point[ZKSNARK.N_1] gamma_abc;
+    G1Point[2] gamma_abc;    // Size of array should be N + 1
 }
 
 struct Proof {
@@ -2011,14 +2010,32 @@ library ZKSNARK {
     static const VerifyingKey vk = {
             {
                 {
-                   { <%=vk_alphabeta_12[0][0][0]%>, <%=vk_alphabeta_12[0][0][1]%> },
-                   { <%=vk_alphabeta_12[0][1][0]%>, <%=vk_alphabeta_12[0][1][1]%> },
-                   { <%=vk_alphabeta_12[0][2][0]%>, <%=vk_alphabeta_12[0][2][1]%> }
+                    {
+                        <%=vk_miller_alphabeta_12[0][0][0]%>,
+                        <%=vk_miller_alphabeta_12[0][0][1]%>
+                    },
+                    {
+                        <%=vk_miller_alphabeta_12[0][1][0]%>,
+                        <%=vk_miller_alphabeta_12[0][1][1]%>
+                    },
+                    {
+                        <%=vk_miller_alphabeta_12[0][2][0]%>,
+                        <%=vk_miller_alphabeta_12[0][2][1]%>
+                    }
                 },
                 {
-                   { <%=vk_alphabeta_12[1][0][0]%>, <%=vk_alphabeta_12[1][0][1]%> },
-                   { <%=vk_alphabeta_12[1][1][0]%>, <%=vk_alphabeta_12[1][1][1]%> },
-                   { <%=vk_alphabeta_12[1][2][0]%>, <%=vk_alphabeta_12[1][2][1]%> }
+                    {
+                        <%=vk_miller_alphabeta_12[1][0][0]%>,
+                        <%=vk_miller_alphabeta_12[1][0][1]%>
+                    },
+                    {
+                        <%=vk_miller_alphabeta_12[1][1][0]%>,
+                        <%=vk_miller_alphabeta_12[1][1][1]%>
+                    },
+                    {
+                        <%=vk_miller_alphabeta_12[1][2][0]%>,
+                        <%=vk_miller_alphabeta_12[1][2][1]%>
+                    }
                 }
             },{
                 {
@@ -2051,7 +2068,8 @@ library ZKSNARK {
     // Number of inputs.
     static const int N = <%=IC.length - 1%>;
     static const int N_1 = <%=IC.length%>; // N + 1, gamma_abc length
-    
+
+
     static function verify(<% if (IC.length > 1) { %>int[ZKSNARK.N] inputs,<% } %> Proof proof) : bool {
 
         G1Point vk_x = vk.gamma_abc[0];
