@@ -47,10 +47,8 @@ export default async function zkeyExportVerificationKey(zkeyName, /* logger */ )
 async function groth16Vk(zkey, fd, sections) {
     const curve = await getCurve(zkey.q);
     const sG1 = curve.G1.F.n8*2;
-
-
+    
     const alphaBeta = await curve.pairing( zkey.vk_alpha_1 , zkey.vk_beta_2 );
-
     
     let vKey = {
         protocol: zkey.protocol,

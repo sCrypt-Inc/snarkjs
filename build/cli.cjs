@@ -13,6 +13,7 @@ var crypto = require('crypto');
 var path = require('path');
 var binFileUtils = require('@iden3/binfileutils');
 var ejs = require('ejs');
+var zokratesJsScrypt = require('zokrates-js-scrypt');
 var circom_runtime = require('circom_runtime');
 var jsSha256 = require('js-sha256');
 var bfj = require('bfj');
@@ -5266,6 +5267,7 @@ async function bellmanContribute(curve, challengeFilename, responesFileName, ent
     You should have received a copy of the GNU General Public License
     along with snarkJS. If not, see <https://www.gnu.org/licenses/>.
 */
+
 const {stringifyBigInts: stringifyBigInts$3} = ffjavascript.utils;
 
 async function zkeyExportVerificationKey(zkeyName, /* logger */ ) {
@@ -5291,23 +5293,24 @@ async function zkeyExportVerificationKey(zkeyName, /* logger */ ) {
 async function groth16Vk(zkey, fd, sections) {
     const curve = await getCurveFromQ(zkey.q);
     const sG1 = curve.G1.F.n8*2;
-
+    
     const alphaBeta = await curve.pairing( zkey.vk_alpha_1 , zkey.vk_beta_2 );
-
+    
     let vKey = {
         protocol: zkey.protocol,
         curve: curve.name,
         nPublic: zkey.nPublic,
 
         vk_alpha_1: curve.G1.toObject(zkey.vk_alpha_1),
+        
 
         vk_beta_2: curve.G2.toObject(zkey.vk_beta_2),
         vk_gamma_2:  curve.G2.toObject(zkey.vk_gamma_2),
         vk_delta_2:  curve.G2.toObject(zkey.vk_delta_2),
 
-        vk_alphabeta_12: curve.Gt.toObject(alphaBeta)
+        vk_alphabeta_12: curve.Gt.toObject(alphaBeta),
     };
-
+    
     // Read IC Section
     ///////////
     await binFileUtils__namespace.startReadUniqueSection(fd, sections, 3);
@@ -5377,11 +5380,68 @@ async function exportSolidityVerifier(zKeyName, templates, logger) {
 
 async function exportScryptVerifier(zKeyName, templates, logger) {
 
-    const verificationKey = await zkeyExportVerificationKey(zKeyName);
+    const vKey = await zkeyExportVerificationKey(zKeyName);
+    
+    if (vKey.curve == "bn128" && vKey.protocol == "groth16") {
+        // Precalculate miller(alpha, beta) for sCrypt verifier.
+        // TODO: This is currently using transpiled Golang code because I 
+        //       couldn't get ffjavascripts miller function to return the 
+        //       correct values we need.
+        //       This should be replaced by more optimal code.
+        const defaultProvider = await zokratesJsScrypt.initialize();
 
-    let template = templates[verificationKey.protocol];
+        let zokratesProvider = defaultProvider.withOptions({ 
+          backend: "bellman",
+          curve: "bn128",
+          scheme: "g16"
+        });
+        
+        BigInt(vKey.vk_alpha_1[0]).toString(16);
 
-    return ejs__default["default"].render(template,  verificationKey);
+        let zeroEl = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+        let alpha = [
+              BigInt(vKey.vk_alpha_1[0]).toString(16),
+              BigInt(vKey.vk_alpha_1[1]).toString(16),
+            ];
+        let beta = [
+               BigInt(vKey.vk_beta_2[0][0]).toString(16),
+               BigInt(vKey.vk_beta_2[0][1]).toString(16),
+               BigInt(vKey.vk_beta_2[1][0]).toString(16),
+               BigInt(vKey.vk_beta_2[1][1]).toString(16),
+            ];
+
+        let zokrates_vk = {
+          scheme: 'g16',
+          curve: 'bn128',
+          alpha: [
+            '0x' + alpha[0].padStart(64, '0'),
+            '0x' + alpha[1].padStart(64, '0'),
+          ],
+          beta: [
+            [
+              '0x' + beta[0].padStart(64, '0'),
+              '0x' + beta[1].padStart(64, '0'),
+            ],
+            [
+              '0x' + beta[2].padStart(64, '0'),
+              '0x' + beta[3].padStart(64, '0'),
+            ]
+          ],
+          // The rest doesn't matter for this calculation.
+          gamma: [[zeroEl, zeroEl],[zeroEl, zeroEl]],
+          delta: [[zeroEl, zeroEl],[zeroEl, zeroEl]],
+          gamma_abc: Array(vKey.IC.length).fill([zeroEl, zeroEl])
+        };
+
+        let resStr = zokratesProvider.computeMillerBetaAlpha(zokrates_vk);
+        
+        vKey.vk_miller_alphabeta_12 = resStr;
+    }
+
+    let template = templates[vKey.protocol];
+
+    return ejs__default["default"].render(template,  vKey);
 }
 
 /*

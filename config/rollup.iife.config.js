@@ -3,6 +3,7 @@ import commonJS from "@rollup/plugin-commonjs";
 import virtual from "@rollup/plugin-virtual";
 import replace from "@rollup/plugin-replace";
 import visualizer from "rollup-plugin-visualizer";
+import { wasm } from '@rollup/plugin-wasm';
 // Needed by fastfile
 import { O_TRUNC, O_CREAT, O_RDWR, O_EXCL, O_RDONLY } from "constants";
 
@@ -22,6 +23,7 @@ export default {
         file: "build/snarkjs.js",
         format: "iife",
         sourcemap: "inline",
+        inlineDynamicImports: true,
         globals: {
             os: "null"
         },
@@ -48,5 +50,6 @@ export default {
             "process.browser": !!process.env.BROWSER
         }),
         visualizer(),
+        wasm(),
     ]
 };
