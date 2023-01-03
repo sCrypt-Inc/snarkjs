@@ -1834,6 +1834,41 @@ library BLS12381Pairing {
         f = BLS12381.mulFe12(t[3], t[4]);
         return f;
     }
+    
+    // Check four pairs.
+    // A * B + inputs * (-gamma) + C * (-delta) == alpha * beta
+    static function pairCheck4Point(
+            PointG1 a0, PointG2 b0,
+            PointG1 a1, PointG2 b1,
+            PointG1 a2, PointG2 b2,
+            PointG1 a3, PointG2 b3) : bool {
+
+        fe12 f1 = BLS12381.Fe12Zero;
+        fe12 f2 = BLS12381.Fe12Zero;
+        fe12 f3 = BLS12381.Fe12Zero;
+        fe12 f0 = BLS12381.Fe12Zero;
+        fe12 acc = BLS12381.Fe12Zero;
+
+        Pair pair = affinePair(a1, b1);
+        f1 = millerLoop(pair.g1, pair.g2);
+
+        pair = affinePair(a2, b2);
+        f2 = millerLoop(pair.g1, pair.g2);
+
+        pair = affinePair(a3, b3);
+        f3 = millerLoop(pair.g1, pair.g2);
+
+        pair = affinePair(a0, b0);
+        f0 = millerLoop(BLS12381.NegG1(pair.g1), pair.g2);
+
+        acc = BLS12381.mulFe12(f1, f2);
+        acc = BLS12381.mulFe12(acc, f3);
+        acc = BLS12381.mulFe12(acc, f0);
+
+        acc = finalExp(acc);
+
+        return BLS12381.isOneFe12(acc);
+    }
 
     // Check three pairs.
     // millerb1a1 + A * B + inputs * (-gamma) + C * (-delta) == 1
@@ -1870,7 +1905,8 @@ library BLS12381Pairing {
 
 
 struct VerifyingKey {
-    fe12 millerb1a1;
+    PointG1 alpha;
+    PointG2 beta;
     PointG2 gamma;
     PointG2 delta;
     PointG1[2] ic; // Size of array should be N + 1
@@ -1886,8 +1922,23 @@ struct Proof {
 library ZKSNARK {
 
     static VerifyingKey vk = {
-            <%=vk_miller_alphabeta_12%>,
             [
+                <%=vk_alpha_1[0]%>,
+                <%=vk_alpha_1[1]%>,
+                1
+            ],[
+                [
+                    <%=vk_beta_2[0][0]%>,
+                    <%=vk_beta_2[0][1]%>
+                ], 
+                [
+                    <%=vk_beta_2[1][0]%>,
+                    <%=vk_beta_2[1][1]%>
+                ],
+                [
+                    1, 0
+                ]
+            ],[
                 [
                     <%=vk_gamma_2[0][0]%>,
                     <%=vk_gamma_2[0][1]%>
@@ -1935,6 +1986,7 @@ library ZKSNARK {
         loop(3) : k {
             proof.a[k] = BLS12381.toMont(proof.a[k]);
             proof.c[k] = BLS12381.toMont(proof.c[k]);
+            vk.alpha[k] = BLS12381.toMont(vk.alpha[k]);
             <% if (IC.length > 1) { %>
             loop(N_1) : m {
                 vk.ic[m][k] = BLS12381.toMont(vk.ic[m][k]);
@@ -1944,14 +1996,17 @@ library ZKSNARK {
         loop(3) : j {
             loop(2) : k {
                 proof.b[j][k] = BLS12381.toMont(proof.b[j][k]);
+                vk.beta[j][k] = BLS12381.toMont(vk.beta[j][k]);
                 vk.gamma[j][k] = BLS12381.toMont(vk.gamma[j][k]);
                 vk.delta[j][k] = BLS12381.toMont(vk.delta[j][k]);
             }
         }
+
         PointG1 vk_x = vkXSetup(inputs, vk.ic);
-        return BLS12381Pairing.pairCheck3Point(
+
+        return BLS12381Pairing.pairCheck4Point(
                 proof.a, proof.b,
-                vk.millerb1a1,
+                vk.alpha, vk.beta,
                 vk_x, vk.gamma,
                 proof.c, vk.delta);
     }

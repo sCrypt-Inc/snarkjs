@@ -73,8 +73,6 @@ export default async function exportScryptVerifier(zKeyName, templates, logger) 
           gamma_abc: Array(vKey.IC.length).fill([zeroEl, zeroEl])
         }
       
-        console.log(JSON.stringify(zokrates_vk));
-
         let resStr = zokratesProvider.computeMillerBetaAlpha(zokrates_vk);
         
         if (vKey.curve == "bls12381") {
