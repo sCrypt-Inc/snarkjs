@@ -5381,24 +5381,32 @@ async function exportSolidityVerifier(zKeyName, templates, logger) {
 async function exportScryptVerifier(zKeyName, templates, logger) {
 
     const vKey = await zkeyExportVerificationKey(zKeyName);
-    
-    if (vKey.curve == "bn128" && vKey.protocol == "groth16") {
+  
+    if ((vKey.curve == "bn128" || vKey.curve == "bls12381")  && vKey.protocol == "groth16") {
         // Precalculate miller(alpha, beta) for sCrypt verifier.
-        // TODO: This is currently using transpiled Golang code because I 
-        //       couldn't get ffjavascripts miller function to return the 
-        //       correct values we need.
-        //       This should be replaced by more optimal code.
+        // We use zokrates-js because the default miller functions results from 
+        // ffjavascript aren't compatible with sCrypts verifier.
         const defaultProvider = await zokratesJsScrypt.initialize();
 
+        // BLS12-381 doesn't work with bellman backend for now:
+        // https://github.com/Zokrates/ZoKrates/issues/1200 
+        const zokBackend = vKey.curve == "bls12381" ? "ark" : "bellman";    
+
         let zokratesProvider = defaultProvider.withOptions({ 
-          backend: "bellman",
-          curve: "bn128",
+          backend: zokBackend,
+          curve: vKey.curve == "bls12381" ? "bls12_381" : vKey.curve,
           scheme: "g16"
         });
-        
+      
         BigInt(vKey.vk_alpha_1[0]).toString(16);
-
-        let zeroEl = "0x0000000000000000000000000000000000000000000000000000000000000000";
+       
+        let padLen = 0;
+        if (vKey.curve == "bn128") {
+          padLen = 64;
+        } else {
+          padLen = 96;
+        }
+        let zeroEl = "0x" + '0'.repeat(padLen);
 
         let alpha = [
               BigInt(vKey.vk_alpha_1[0]).toString(16),
@@ -5413,19 +5421,19 @@ async function exportScryptVerifier(zKeyName, templates, logger) {
 
         let zokrates_vk = {
           scheme: 'g16',
-          curve: 'bn128',
+          curve: vKey.curve == "bls12381" ? "bls12_381" : vKey.curve,
           alpha: [
-            '0x' + alpha[0].padStart(64, '0'),
-            '0x' + alpha[1].padStart(64, '0'),
+            '0x' + alpha[0].padStart(padLen, '0'),
+            '0x' + alpha[1].padStart(padLen, '0'),
           ],
           beta: [
             [
-              '0x' + beta[0].padStart(64, '0'),
-              '0x' + beta[1].padStart(64, '0'),
+              '0x' + beta[0].padStart(padLen, '0'),
+              '0x' + beta[1].padStart(padLen, '0'),
             ],
             [
-              '0x' + beta[2].padStart(64, '0'),
-              '0x' + beta[3].padStart(64, '0'),
+              '0x' + beta[2].padStart(padLen, '0'),
+              '0x' + beta[3].padStart(padLen, '0'),
             ]
           ],
           // The rest doesn't matter for this calculation.
@@ -5433,13 +5441,19 @@ async function exportScryptVerifier(zKeyName, templates, logger) {
           delta: [[zeroEl, zeroEl],[zeroEl, zeroEl]],
           gamma_abc: Array(vKey.IC.length).fill([zeroEl, zeroEl])
         };
+      
+        console.log(JSON.stringify(zokrates_vk));
 
         let resStr = zokratesProvider.computeMillerBetaAlpha(zokrates_vk);
+        
+        if (vKey.curve == "bls12381") {
+          resStr = resStr.replaceAll("{", "[").replaceAll("}", "]");
+        }
         
         vKey.vk_miller_alphabeta_12 = resStr;
     }
 
-    let template = templates[vKey.protocol];
+    let template = templates[vKey.protocol][vKey.curve];
 
     return ejs__default["default"].render(template,  vKey);
 }
@@ -8671,15 +8685,14 @@ async function zkeyExportScryptVerifier(params, options) {
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
-    const templates = {};
+    const templatesDir = await fileExists(path__default["default"].join(__dirname$1, "templates")) ? "templates" : "../templates";
 
-    if (await fileExists(path__default["default"].join(__dirname$1, "templates"))) {
-        templates.groth16 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "templates", "verifier_groth16.scrypt.ejs"), "utf8");
-        templates.plonk = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "templates", "verifier_plonk.scrypt.ejs"), "utf8");    
-    } else {
-        templates.groth16 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "..", "templates", "verifier_groth16.scrypt.ejs"), "utf8");
-        templates.plonk = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "..", "templates", "verifier_plonk.scrypt.ejs"), "utf8");    
-    }
+    const templates = {};
+    templates.groth16 = {};
+    templates.plonk = {};
+    templates.groth16.bn128 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, templatesDir, "verifier_groth16_bn128.scrypt.ejs"), "utf8");
+    templates.groth16.bls12381 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, templatesDir, "verifier_groth16_bls12381.scrypt.ejs"), "utf8");
+    templates.plonk.bn128 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, templatesDir, "verifier_plonk_bn128.scrypt.ejs"), "utf8");    
     
     const verifierCode = await exportScryptVerifier(zkeyName, templates);
 

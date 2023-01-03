@@ -12,22 +12,32 @@ import { initialize } from "zokrates-js-scrypt";
 export default async function exportScryptVerifier(zKeyName, templates, logger) {
 
     const vKey = await exportVerificationKey(zKeyName, logger);
-    
-    if (vKey.curve == "bn128" && vKey.protocol == "groth16") {
+  
+    if ((vKey.curve == "bn128" || vKey.curve == "bls12381")  && vKey.protocol == "groth16") {
         // Precalculate miller(alpha, beta) for sCrypt verifier.
         // We use zokrates-js because the default miller functions results from 
         // ffjavascript aren't compatible with sCrypts verifier.
         const defaultProvider = await initialize();
 
+        // BLS12-381 doesn't work with bellman backend for now:
+        // https://github.com/Zokrates/ZoKrates/issues/1200 
+        const zokBackend = vKey.curve == "bls12381" ? "ark" : "bellman";    
+
         let zokratesProvider = defaultProvider.withOptions({ 
-          backend: "bellman",
-          curve: "bn128",
+          backend: zokBackend,
+          curve: vKey.curve == "bls12381" ? "bls12_381" : vKey.curve,
           scheme: "g16"
         });
-        
+      
         let alphastr = BigInt(vKey.vk_alpha_1[0]).toString(16);
-
-        let zeroEl = "0x0000000000000000000000000000000000000000000000000000000000000000";
+       
+        let padLen = 0;
+        if (vKey.curve == "bn128") {
+          padLen = 64;
+        } else {
+          padLen = 96;
+        }
+        let zeroEl = "0x" + '0'.repeat(padLen);
 
         let alpha = [
               BigInt(vKey.vk_alpha_1[0]).toString(16),
@@ -42,19 +52,19 @@ export default async function exportScryptVerifier(zKeyName, templates, logger) 
 
         let zokrates_vk = {
           scheme: 'g16',
-          curve: 'bn128',
+          curve: vKey.curve == "bls12381" ? "bls12_381" : vKey.curve,
           alpha: [
-            '0x' + alpha[0].padStart(64, '0'),
-            '0x' + alpha[1].padStart(64, '0'),
+            '0x' + alpha[0].padStart(padLen, '0'),
+            '0x' + alpha[1].padStart(padLen, '0'),
           ],
           beta: [
             [
-              '0x' + beta[0].padStart(64, '0'),
-              '0x' + beta[1].padStart(64, '0'),
+              '0x' + beta[0].padStart(padLen, '0'),
+              '0x' + beta[1].padStart(padLen, '0'),
             ],
             [
-              '0x' + beta[2].padStart(64, '0'),
-              '0x' + beta[3].padStart(64, '0'),
+              '0x' + beta[2].padStart(padLen, '0'),
+              '0x' + beta[3].padStart(padLen, '0'),
             ]
           ],
           // The rest doesn't matter for this calculation.
@@ -62,13 +72,19 @@ export default async function exportScryptVerifier(zKeyName, templates, logger) 
           delta: [[zeroEl, zeroEl],[zeroEl, zeroEl]],
           gamma_abc: Array(vKey.IC.length).fill([zeroEl, zeroEl])
         }
+      
+        console.log(JSON.stringify(zokrates_vk));
 
         let resStr = zokratesProvider.computeMillerBetaAlpha(zokrates_vk);
+        
+        if (vKey.curve == "bls12381") {
+          resStr = resStr.replaceAll("{", "[").replaceAll("}", "]");
+        }
         
         vKey.vk_miller_alphabeta_12 = resStr;
     }
 
-    let template = templates[vKey.protocol];
+    let template = templates[vKey.protocol][vKey.curve];
 
     return ejs.render(template,  vKey);
 }
