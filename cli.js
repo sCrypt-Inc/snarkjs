@@ -239,6 +239,12 @@ const commands = [
         action: zkeyExportScryptVerifier
     },
     {
+        cmd: "zkey export scrypttsverifier [circuit_final.zkey] [verifier.ts]",
+        description: "Creates a verifier in scryptTS",
+        alias: ["zkesv", "generatetsverifier -vk|verificationkey -v|verifier"],
+        action: zkeyExportScryptTSVerifier
+    },
+    {
         cmd: "zkey export solidityverifier [circuit_final.zkey] [verifier.sol]",
         description: "Creates a verifier in solidity",
         alias: ["zkesv", "generateverifier -vk|verificationkey -v|verifier"],
@@ -634,6 +640,38 @@ async function zkeyExportScryptVerifier(params, options) {
     return 0;
 }
 
+// scrypt gentsverifier [circuit_final.zkey] [verifier.ts]
+async function zkeyExportScryptTSVerifier(params, options) {
+    let zkeyName;
+    let verifierName;
+
+    if (params.length < 1) {
+        zkeyName = "circuit_final.zkey";
+    } else {
+        zkeyName = params[0];
+    }
+
+    if (params.length < 2) {
+        verifierName = "verifier.ts";
+    } else {
+        verifierName = params[1];
+    }
+
+    if (options.verbose) Logger.setLogLevel("DEBUG");
+
+    const templatesDir = await fileExists(path.join(__dirname, "templates")) ? "templates" : "../templates";
+
+    const templates = {};
+    templates.groth16 = {};
+    templates.plonk = {};
+    templates.groth16.bn128 = await fs.promises.readFile(path.join(__dirname, templatesDir, "verifier_groth16_bn128.scryptts.ejs"), "utf8");
+    
+    const verifierCode = await zkey.exportScryptTSVerifier(zkeyName, templates, logger);
+
+    fs.writeFileSync(verifierName, verifierCode, "utf-8");
+
+    return 0;
+}
 
 
 // solidity gencall <public.json> <proof.json>

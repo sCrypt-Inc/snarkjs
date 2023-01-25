@@ -119,6 +119,22 @@
                 "test/g16_circuit/verifier.scrypt",
             ]
         },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "export scryptTS G16 verifier",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "cli.js",
+            "args": [
+                "zkey",
+                "export",
+                "scrypttsverifier",
+                "test/g16_circuit/circuit.zkey",
+                "test/g16_circuit/verifier.ts",
+            ]
+        },
         {            
             "type": "node",            
             "request": "launch",            
