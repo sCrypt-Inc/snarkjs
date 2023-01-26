@@ -20,6 +20,7 @@
 /* eslint-disable no-console */
 
 import fs from "fs";
+import { copySync } from "fs-extra";
 import url from "url";
 
 import {readR1cs} from "r1csfile";
@@ -239,7 +240,7 @@ const commands = [
         action: zkeyExportScryptVerifier
     },
     {
-        cmd: "zkey export scrypttsverifier [circuit_final.zkey] [verifier.ts]",
+        cmd: "zkey export scrypttsverifier [circuit_final.zkey]",
         description: "Creates a verifier in scryptTS",
         alias: ["zkesv", "generatetsverifier -vk|verificationkey -v|verifier"],
         action: zkeyExportScryptTSVerifier
@@ -643,18 +644,12 @@ async function zkeyExportScryptVerifier(params, options) {
 // scrypt gentsverifier [circuit_final.zkey] [verifier.ts]
 async function zkeyExportScryptTSVerifier(params, options) {
     let zkeyName;
-    let verifierName;
+    let verifierName = "verifier.ts";
 
     if (params.length < 1) {
         zkeyName = "circuit_final.zkey";
     } else {
         zkeyName = params[0];
-    }
-
-    if (params.length < 2) {
-        verifierName = "verifier.ts";
-    } else {
-        verifierName = params[1];
     }
 
     if (options.verbose) Logger.setLogLevel("DEBUG");
@@ -668,7 +663,11 @@ async function zkeyExportScryptTSVerifier(params, options) {
     
     const verifierCode = await zkey.exportScryptTSVerifier(zkeyName, templates, logger);
 
-    fs.writeFileSync(verifierName, verifierCode, "utf-8");
+    // Clone template dir
+    copySync(path.join(__dirname, templatesDir, 'verifier_groth16_bn128_scryptts_boilerplate'), 'verifier')
+
+    // Write verifier to src/ dir
+    fs.writeFileSync(path.join('verifier', 'src', 'contracts', verifierName), verifierCode, "utf-8");
 
     return 0;
 }

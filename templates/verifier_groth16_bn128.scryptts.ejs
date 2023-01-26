@@ -1,4 +1,4 @@
-import { and, SmartContractLib, method, lshift, prop, FixedArray } from 'scrypt-ts'
+import { and, assert, SmartContract, SmartContractLib, method, lshift, prop, FixedArray } from 'scrypt-ts'
 
 export type FQ = bigint
 
@@ -2466,7 +2466,7 @@ export class G16BN256 extends SmartContractLib {
 
     @method()
     static verify(
-        inputs: FixedArray<bigint, G16BN256.N>,
+        inputs: FixedArray<bigint, <%=IC.length - 1%>>,
         proof: Proof,
     ): boolean {
         let vk_x = G16BN256.vk.gammaAbc[0]
