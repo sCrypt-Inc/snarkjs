@@ -461,15 +461,9 @@ If all is well, you should see that `OK` has been outputted to your console. Thi
 
 ### 25. Turn the verifier into a smart contract
 
-You can export the verifier as an sCrypt smart contract:
+You can export the verifier as an [scryptTS](https://scrypt.io/scrypt-ts/) project, which also contains useful scaffolding:
 ```sh
-snarkjs zkey export scryptverifier circuit_final.zkey verifier.scrypt
-```
-
-or an [scryptTS](https://scrypt.io/scrypt-ts/) project, which also contains useful scaffolding:
-
-```sh
-snarkjs zkey export scrypttsverifier circuit_final.zkey
+snarkjs zkey export scryptverifier circuit_final.zkey 
 ```
 
 ## Using Node

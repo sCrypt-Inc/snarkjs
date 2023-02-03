@@ -234,13 +234,7 @@ const commands = [
         action: zkeyExportJson
     },
     {
-        cmd: "zkey export scryptverifier [circuit_final.zkey] [verifier.scrypt]",
-        description: "Creates a verifier in scrypt",
-        alias: ["zkesv", "generateverifier -vk|verificationkey -v|verifier"],
-        action: zkeyExportScryptVerifier
-    },
-    {
-        cmd: "zkey export scrypttsverifier [circuit_final.zkey]",
+        cmd: "zkey export scryptverifier [circuit_final.zkey]",
         description: "Creates a verifier in scryptTS",
         alias: ["zkesv", "generatetsverifier -vk|verificationkey -v|verifier"],
         action: zkeyExportScryptTSVerifier
@@ -600,41 +594,6 @@ async function zkeyExportSolidityVerifier(params, options) {
     }
     
     const verifierCode = await zkey.exportSolidityVerifier(zkeyName, templates, logger);
-
-    fs.writeFileSync(verifierName, verifierCode, "utf-8");
-
-    return 0;
-}
-
-// scrypt genverifier [circuit_final.zkey] [verifier.scrypt]
-async function zkeyExportScryptVerifier(params, options) {
-    let zkeyName;
-    let verifierName;
-
-    if (params.length < 1) {
-        zkeyName = "circuit_final.zkey";
-    } else {
-        zkeyName = params[0];
-    }
-
-    if (params.length < 2) {
-        verifierName = "verifier.scrypt";
-    } else {
-        verifierName = params[1];
-    }
-
-    if (options.verbose) Logger.setLogLevel("DEBUG");
-
-    const templatesDir = await fileExists(path.join(__dirname, "templates")) ? "templates" : "../templates";
-
-    const templates = {};
-    templates.groth16 = {};
-    templates.plonk = {};
-    templates.groth16.bn128 = await fs.promises.readFile(path.join(__dirname, templatesDir, "verifier_groth16_bn128.scrypt.ejs"), "utf8");
-    templates.groth16.bls12381 = await fs.promises.readFile(path.join(__dirname, templatesDir, "verifier_groth16_bls12381.scrypt.ejs"), "utf8");
-    templates.plonk.bn128 = await fs.promises.readFile(path.join(__dirname, templatesDir, "verifier_plonk_bn128.scrypt.ejs"), "utf8");    
-    
-    const verifierCode = await zkey.exportScryptVerifier(zkeyName, templates, logger);
 
     fs.writeFileSync(verifierName, verifierCode, "utf-8");
 
