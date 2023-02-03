@@ -50,7 +50,6 @@
     "js-sha3": "^0.8.0",
     "logplease": "^1.2.15",
     "r1csfile": "0.0.40",
-    "zokrates-js-scrypt": "1.1.4",
     "fs-extra": "^11.1.0"
   },
   "devDependencies": {

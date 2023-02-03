@@ -2399,66 +2399,52 @@ export type Proof = {
     c: G1Point
 }
 
-export class G16BN256 extends SmartContractLib {
-    
-    @prop()
-    static readonly vk: VerifyingKey = {
-            millerb1a1: {
-                x: {
-                    x: {
-                        x: <%=vk_miller_alphabeta_12[0]%>n,
-                        y: <%=vk_miller_alphabeta_12[1]%>n
-                    }, 
-                    y: {
-                        x: <%=vk_miller_alphabeta_12[2]%>n,
-                        y: <%=vk_miller_alphabeta_12[3]%>n
-                    },
-                    z: {
-                        x: <%=vk_miller_alphabeta_12[4]%>n,
-                        y: <%=vk_miller_alphabeta_12[5]%>n
-                    }
-                },
-                y: {
-                    x: {
-                        x: <%=vk_miller_alphabeta_12[6]%>n,
-                        y: <%=vk_miller_alphabeta_12[7]%>n
-                    }, 
-                    y: {
-                        x: <%=vk_miller_alphabeta_12[8]%>n,
-                        y: <%=vk_miller_alphabeta_12[9]%>n
-                    },
-                    z: {
-                        x: <%=vk_miller_alphabeta_12[10]%>n,
-                        y: <%=vk_miller_alphabeta_12[11]%>n
-                    }
-                }
-            },
-            gamma: {
-                x: {
-                    x: <%=vk_gamma_2[0][0]%>n,
-                    y: <%=vk_gamma_2[0][1]%>n
-                }, 
-                y: {
-                    x: <%=vk_gamma_2[1][0]%>n,
-                    y: <%=vk_gamma_2[1][1]%>n
-                }
-            },
-            delta: {
-                x: {
-                    x: <%=vk_delta_2[0][0]%>n,
-                    y: <%=vk_delta_2[0][1]%>n
-                }, 
-                y: {
-                    x: <%=vk_delta_2[1][0]%>n,
-                    y: <%=vk_delta_2[1][1]%>n
-                }
-            },
-            gammaAbc: [<% for (let i=0; i<IC.length; i++) { %>
+const gammaAbc: FixedArray<G1Point, <%=IC.length%>> = [<% for (let i=0; i<IC.length; i++) { %>
                 { 
                     x: <%=IC[i][0]%>n,
                     y: <%=IC[i][1]%>n
                 }<% if (i < IC.length - 1) { %>, <% } %> <% } %>
-            ]};
+            ]
+
+export const VERIFYING_KEY_DATA = {
+    alpha: {
+        x: <%=vk_alpha_1[0]%>n,
+        y: <%=vk_alpha_1[1]%>n,
+    },
+    beta: {
+        x: {
+            x: <%=vk_beta_2[0][0]%>n,
+            y: <%=vk_beta_2[0][1]%>n
+        }, 
+        y: {
+            x: <%=vk_beta_2[1][0]%>n,
+            y: <%=vk_beta_2[1][1]%>n
+        }
+    },
+    gamma: {
+        x: {
+            x: <%=vk_gamma_2[0][0]%>n,
+            y: <%=vk_gamma_2[0][1]%>n
+        }, 
+        y: {
+            x: <%=vk_gamma_2[1][0]%>n,
+            y: <%=vk_gamma_2[1][1]%>n
+        }
+    },
+    delta: {
+        x: {
+            x: <%=vk_delta_2[0][0]%>n,
+            y: <%=vk_delta_2[0][1]%>n
+        }, 
+        y: {
+            x: <%=vk_delta_2[1][0]%>n,
+            y: <%=vk_delta_2[1][1]%>n
+        }
+    },
+    gammaAbc: gammaAbc
+}
+
+export class G16BN256 extends SmartContractLib {
     
     @prop()
     static readonly N = <%=IC.length - 1%>n // Number of public inputs.
@@ -2466,12 +2452,13 @@ export class G16BN256 extends SmartContractLib {
 
     @method()
     static verify(
+        vk: VerifyingKey,
         inputs: FixedArray<bigint, <%=IC.length - 1%>>,
         proof: Proof,
     ): boolean {
-        let vk_x = G16BN256.vk.gammaAbc[0]
+        let vk_x = vk.gammaAbc[0]
         for (let i = 0; i < G16BN256.N; i++) {
-            const p = BN256.mulG1Point(G16BN256.vk.gammaAbc[i + 1], inputs[i])
+            const p = BN256.mulG1Point(vk.gammaAbc[i + 1], inputs[i])
             vk_x = BN256.addG1Points(vk_x, p)
         }
 
@@ -2482,21 +2469,30 @@ export class G16BN256 extends SmartContractLib {
         return BN256Pairing.pairCheckP4Precalc(
             a0,
             proof.b,
-            G16BN256.vk.millerb1a1,
+            vk.millerb1a1,
             vk_x,
-            G16BN256.vk.gamma,
+            vk.gamma,
             proof.c,
-            G16BN256.vk.delta
+            vk.delta
         )
     }
 }
 
 export class Verifier extends SmartContract {
+
+    @prop()
+    vk: VerifyingKey;
+    
+    constructor(vk: VerifyingKey) {
+        super(...arguments)
+        this.vk = vk
+    }
+    
     @method()
     public verifyProof(
         inputs: FixedArray<bigint, <%=IC.length - 1%>>,
         proof: Proof,
     ) {
-        assert(G16BN256.verify(inputs, proof))
+        assert(G16BN256.verify(this.vk, inputs, proof))
     }
 }
