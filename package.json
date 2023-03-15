@@ -1,7 +1,7 @@
 {
   "name": "snarkjs-scrypt",
   "type": "module",
-  "version": "0.4.27",
+  "version": "0.5.0",
   "description": "zkSNARKs implementation in JavaScript",
   "main": "./build/main.cjs",
   "module": "./main.js",
@@ -32,11 +32,11 @@
     "cryptography",
     "circuit"
   ],
-  "author": "Jordi Baylina",
+  "author": "Jordi Baylina, sCrypt Inc.",
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iden3/snarkjs.git"
+    "url": "https://github.com/sCrypt-Inc/snarkjs.git"
   },
   "dependencies": {
     "@iden3/binfileutils": "0.0.11",

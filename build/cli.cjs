@@ -8038,8 +8038,8 @@ async function wtnsExportJson$1(wtnsFileName) {
     You should have received a copy of the GNU General Public License
     along with snarkJS. If not, see <https://www.gnu.org/licenses/>.
 */
-const {stringifyBigInts} = ffjavascript.utils;
-const logger = Logger__default["default"].create("snarkJS", {showTimestamp:false});
+const { stringifyBigInts } = ffjavascript.utils;
+const logger = Logger__default["default"].create("snarkJS", { showTimestamp: false });
 Logger__default["default"].setLogLevel("INFO");
 
 const __dirname$1 = path__default["default"].dirname(url__default["default"].fileURLToPath((typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('cli.cjs', document.baseURI).href))));
@@ -8310,7 +8310,7 @@ const commands = [
 
 
 
-clProcessor(commands).then( (res) => {
+clProcessor(commands).then((res) => {
     process.exit(res);
 }, (err) => {
     logger.error(err);
@@ -8343,17 +8343,17 @@ TODO COMMANDS
 
 function changeExt(fileName, newExt) {
     let S = fileName;
-    while ((S.length>0) && (S[S.length-1] != ".")) S = S.slice(0, S.length-1);
-    if (S.length>0) {
+    while ((S.length > 0) && (S[S.length - 1] != ".")) S = S.slice(0, S.length - 1);
+    if (S.length > 0) {
         return S + newExt;
     } else {
-        return fileName+"."+newExt;
+        return fileName + "." + newExt;
     }
 }
 
 // r1cs export circomJSON [circuit.r1cs] [circuit.json]
 async function r1csInfo(params, options) {
-    const r1csName = params[0] ||  "circuit.r1cs";
+    const r1csName = params[0] || "circuit.r1cs";
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
@@ -8478,7 +8478,7 @@ async function groth16Prove(params, options) {
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
-    const {proof, publicSignals} = await groth16Prove$1(zkeyName, witnessName, logger);
+    const { proof, publicSignals } = await groth16Prove$1(zkeyName, witnessName, logger);
 
     await bfj__default["default"].write(proofName, stringifyBigInts(proof), { space: 1 });
     await bfj__default["default"].write(publicName, stringifyBigInts(publicSignals), { space: 1 });
@@ -8499,7 +8499,7 @@ async function groth16FullProve(params, options) {
 
     const input = JSON.parse(await fs__default["default"].promises.readFile(inputName, "utf8"));
 
-    const {proof, publicSignals} = await groth16FullProve$1(input, wasmName, zkeyName,  logger);
+    const { proof, publicSignals } = await groth16FullProve$1(input, wasmName, zkeyName, logger);
 
     await bfj__default["default"].write(proofName, stringifyBigInts(proof), { space: 1 });
     await bfj__default["default"].write(publicName, stringifyBigInts(publicSignals), { space: 1 });
@@ -8581,12 +8581,12 @@ async function zkeyExportSolidityVerifier(params, options) {
 
     if (await fileExists(path__default["default"].join(__dirname$1, "templates"))) {
         templates.groth16 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "templates", "verifier_groth16.sol.ejs"), "utf8");
-        templates.plonk = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "templates", "verifier_plonk.sol.ejs"), "utf8");    
+        templates.plonk = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "templates", "verifier_plonk.sol.ejs"), "utf8");
     } else {
         templates.groth16 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "..", "templates", "verifier_groth16.sol.ejs"), "utf8");
-        templates.plonk = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "..", "templates", "verifier_plonk.sol.ejs"), "utf8");    
+        templates.plonk = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, "..", "templates", "verifier_plonk.sol.ejs"), "utf8");
     }
-    
+
     const verifierCode = await exportSolidityVerifier(zkeyName, templates);
 
     fs__default["default"].writeFileSync(verifierName, verifierCode, "utf-8");
@@ -8613,8 +8613,13 @@ async function zkeyExportScryptTSVerifier(params, options) {
     templates.groth16 = {};
     templates.plonk = {};
     templates.groth16.bn128 = await fs__default["default"].promises.readFile(path__default["default"].join(__dirname$1, templatesDir, "verifier_groth16_bn128.scryptts.ejs"), "utf8");
-    
+
     const verifierCode = await exportScryptTSVerifier(zkeyName, templates);
+
+    // Rm verifier dir, if already present.
+    if (fs__default["default"].existsSync('verifier')) {
+        fs__default["default"].rmSync('verifier', { recursive: true, force: true });
+    }
 
     // Clone template dir
     fsExtra.copySync(path__default["default"].join(__dirname$1, templatesDir, 'verifier_groth16_bn128_scryptts_boilerplate'), 'verifier');
@@ -8670,7 +8675,7 @@ async function powersOfTauNew(params, options) {
     curveName = params[0];
 
     power = parseInt(params[1]);
-    if ((power<1) || (power>28)) {
+    if ((power < 1) || (power > 28)) {
         throw new Error("Power must be between 1 and 28");
     }
 
@@ -8777,7 +8782,7 @@ async function powersOfTauBeacon(params, options) {
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
-    return await beacon$1(oldPtauName, newPtauName, options.name ,beaconHashStr, numIterationsExp, logger);
+    return await beacon$1(oldPtauName, newPtauName, options.name, beaconHashStr, numIterationsExp, logger);
 }
 
 async function powersOfTauContribute(params, options) {
@@ -8789,7 +8794,7 @@ async function powersOfTauContribute(params, options) {
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
-    return await contribute(oldPtauName, newPtauName, options.name , options.entropy, logger);
+    return await contribute(oldPtauName, newPtauName, options.name, options.entropy, logger);
 }
 
 async function powersOfTauPreparePhase2(params, options) {
@@ -8823,9 +8828,9 @@ async function powersOfTauTruncate(params, options) {
     ptauName = params[0];
 
     let template = ptauName;
-    while ((template.length>0) && (template[template.length-1] != ".")) template = template.slice(0, template.length-1);
-    template = template.slice(0, template.length-1);
-    template = template+"_";
+    while ((template.length > 0) && (template[template.length - 1] != ".")) template = template.slice(0, template.length - 1);
+    template = template.slice(0, template.length - 1);
+    template = template + "_";
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
@@ -9013,7 +9018,7 @@ async function zkeyBeacon(params, options) {
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
-    return await beacon(zkeyOldName, zkeyNewName, options.name ,beaconHashStr, numIterationsExp, logger);
+    return await beacon(zkeyOldName, zkeyNewName, options.name, beaconHashStr, numIterationsExp, logger);
 }
 
 
@@ -9078,7 +9083,7 @@ async function plonkProve(params, options) {
 
     if (options.verbose) Logger__default["default"].setLogLevel("DEBUG");
 
-    const {proof, publicSignals} = await plonk16Prove(zkeyName, witnessName, logger);
+    const { proof, publicSignals } = await plonk16Prove(zkeyName, witnessName, logger);
 
     await bfj__default["default"].write(proofName, stringifyBigInts(proof), { space: 1 });
     await bfj__default["default"].write(publicName, stringifyBigInts(publicSignals), { space: 1 });
@@ -9100,7 +9105,7 @@ async function plonkFullProve(params, options) {
 
     const input = JSON.parse(await fs__default["default"].promises.readFile(inputName, "utf8"));
 
-    const {proof, publicSignals} = await plonkFullProve$1(input, wasmName, zkeyName,  logger);
+    const { proof, publicSignals } = await plonkFullProve$1(input, wasmName, zkeyName, logger);
 
     await bfj__default["default"].write(proofName, stringifyBigInts(proof), { space: 1 });
     await bfj__default["default"].write(publicName, stringifyBigInts(publicSignals), { space: 1 });
@@ -9162,7 +9167,7 @@ async function fileInfo(params) {
                     errors.push(`Section ${index} size is zero. This could cause false errors in other sections.`);
                 }
             }
-            if(section[0].p + section[0].size > fd.totalSize) {
+            if (section[0].p + section[0].size > fd.totalSize) {
                 errors.push(`Section ${index} is out of bounds of the file.`);
             }
 
@@ -9175,8 +9180,7 @@ async function fileInfo(params) {
                 console.error("\x1b[31m%s\x1b[0m", "                 > " + error);
             });
         });
-    } catch (error)
-    {
+    } catch (error) {
         console.error(error.message);
     }
 }
