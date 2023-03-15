@@ -24,7 +24,7 @@
     ]
   },
   "dependencies": {
-    "scrypt-ts": "=0.1.5-beta.16"
+    "scrypt-ts": "^0.1.7-beta.8"
   },
   "devDependencies": {
     "@types/chai": "^4.3.4",
