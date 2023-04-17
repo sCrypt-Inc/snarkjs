@@ -131,8 +131,7 @@
                 "zkey",
                 "export",
                 "scrypttsverifier",
-                "test/g16_circuit/circuit.zkey",
-                "test/g16_circuit/verifier.ts",
+                "test/g16_circuit/circuit.zkey"
             ]
         },
         {            

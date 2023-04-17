@@ -8594,10 +8594,10 @@ async function zkeyExportSolidityVerifier(params, options) {
     return 0;
 }
 
-// scrypt gentsverifier [circuit_final.zkey] [verifier.ts]
+// scrypt gentsverifier [circuit_final.zkey]
 async function zkeyExportScryptTSVerifier(params, options) {
     let zkeyName;
-    let verifierName = "verifier.ts";
+    let verifierName = "snark.ts";
 
     if (params.length < 1) {
         zkeyName = "circuit_final.zkey";
