@@ -630,6 +630,9 @@ async function zkeyExportScryptTSVerifier(params, options) {
     // Clone template dir
     copySync(path.join(__dirname, templatesDir, 'verifier_groth16_bn128_scryptts_boilerplate'), 'verifier')
 
+    // Build dir structure
+    fs.mkdirSync(path.join('verifier', 'src', 'contracts'), { recursive: true })
+
     // Write verifier to src/ dir
     fs.writeFileSync(path.join('verifier', 'src', 'contracts', verifierName), verifierCode, "utf-8");
 
